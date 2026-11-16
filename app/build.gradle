@@ -7,11 +7,19 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId 'fr.tbsa.serveur'
+        applicationId 'fr.tbsa.mediaserver'
         minSdk 21
         targetSdk 34
-        versionCode 6
-        versionName '1.5'
+        versionCode 10
+        versionName '1.9'
+    }
+    signingConfigs {
+        debug {
+            storeFile file('tbsa-stable.jks')
+            storePassword 'tbsa1234'
+            keyAlias 'tbsa'
+            keyPassword 'tbsa1234'
+        }
     }
     buildTypes {
         release { minifyEnabled false }

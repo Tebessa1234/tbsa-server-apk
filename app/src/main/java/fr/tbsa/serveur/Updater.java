@@ -134,7 +134,7 @@ final class Updater {
                         prefs.edit().putString("apkStamp", stamp).apply();
                         try {
                             Intent i = new Intent(Intent.ACTION_VIEW);
-                            i.setDataAndType(Uri.parse("content://fr.tbsa.serveur.update/update.apk"), "application/vnd.android.package-archive");
+                            i.setDataAndType(Uri.parse("content://fr.tbsa.mediaserver.update/update.apk"), "application/vnd.android.package-archive");
                             i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
                             act.startActivity(i);
                         } catch (Exception e) {

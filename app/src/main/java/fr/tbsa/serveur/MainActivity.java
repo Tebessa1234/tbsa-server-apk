@@ -63,6 +63,8 @@ public class MainActivity extends Activity {
     private View customView;
     private WebChromeClient.CustomViewCallback customCb;
     private WebChromeClient chrome;
+    private WebView yt;
+    private long ytBack = 0;
     private ExecutorService pool;
 
     @Override
@@ -161,6 +163,16 @@ public class MainActivity extends Activity {
     /** Appelé par la page web (bouton « Changer de serveur » dans Réglages). */
     private class Bridge {
         @JavascriptInterface
+        public void openYoutube() {
+            ui.post(new Runnable() { @Override public void run() { showYoutube(); } });
+        }
+
+        @JavascriptInterface
+        public void openYoutubeApp() {
+            ui.post(new Runnable() { @Override public void run() { launchYoutubeApp(); } });
+        }
+
+        @JavascriptInterface
         public void changeServer() {
             ui.post(new Runnable() {
                 @Override
@@ -170,6 +182,56 @@ public class MainActivity extends Activity {
                 }
             });
         }
+    }
+
+    /* ---------- YouTube dans l'application ---------- */
+
+    private void showYoutube() {
+        if (yt == null) {
+            yt = new WebView(this);
+            WebSettings ys = yt.getSettings();
+            ys.setJavaScriptEnabled(true);
+            ys.setDomStorageEnabled(true);
+            ys.setMediaPlaybackRequiresUserGesture(false);
+            String ua = ys.getUserAgentString();
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("Chrome/([0-9.]+)").matcher(ua);
+            String ver = m.find() ? m.group(1) : "80.0.3987.162";
+            ys.setUserAgentString("Mozilla/5.0 (SMART-TV; Linux; Tizen 6.5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/" + ver + " TV Safari/537.36");
+            yt.setBackgroundColor(0xFF000000);
+            yt.setFocusable(true);
+            yt.setFocusableInTouchMode(true);
+            yt.setWebViewClient(new WebViewClient());
+            yt.setWebChromeClient(new WebChromeClient());
+            root.addView(yt, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            yt.loadUrl("https://www.youtube.com/tv");
+            android.widget.Toast.makeText(this, "Appuyez 2 fois sur Retour pour quitter YouTube", android.widget.Toast.LENGTH_LONG).show();
+        }
+        ytBack = 0;
+        web.setVisibility(View.GONE);
+        yt.setVisibility(View.VISIBLE);
+        yt.requestFocus();
+    }
+
+    private void closeYoutube() {
+        if (yt != null) {
+            root.removeView(yt);
+            yt.destroy();
+            yt = null;
+        }
+        web.setVisibility(View.VISIBLE);
+        web.requestFocus();
+    }
+
+    private void launchYoutubeApp() {
+        String[] pk = {"com.amazon.firetv.youtube", "com.google.android.youtube.tv", "com.google.android.youtube"};
+        for (String p : pk) {
+            try {
+                android.content.Intent i = getPackageManager().getLeanbackLaunchIntentForPackage(p);
+                if (i == null) i = getPackageManager().getLaunchIntentForPackage(p);
+                if (i != null) { startActivity(i); return; }
+            } catch (Exception ignored) { }
+        }
+        android.widget.Toast.makeText(this, "Application YouTube introuvable sur cet appareil", android.widget.Toast.LENGTH_LONG).show();
     }
 
     /* ---------- Écran de connexion ---------- */
@@ -366,6 +428,14 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
+        if (yt != null && yt.getVisibility() == View.VISIBLE) {
+            long now = System.currentTimeMillis();
+            if (now - ytBack < 900) { closeYoutube(); return; }
+            ytBack = now;
+            yt.dispatchKeyEvent(new android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_ESCAPE));
+            yt.dispatchKeyEvent(new android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_ESCAPE));
+            return;
+        }
         if (customView != null) {
             chrome.onHideCustomView();
             return;
@@ -401,17 +471,20 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         web.onPause();
+        if (yt != null) yt.onPause();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         web.onResume();
+        if (yt != null) yt.onResume();
     }
 
     @Override
     protected void onDestroy() {
         if (pool != null) pool.shutdownNow();
+        if (yt != null) yt.destroy();
         web.destroy();
         super.onDestroy();
     }

@@ -1,10 +1,6 @@
-name: Compiler l'application TBSA
+name: Compiler TBSA
 
-# Se lance toute seule a chaque depot de fichiers, ou a la demande (onglet Actions > Run workflow).
-on:
-  workflow_dispatch:
-  push:
-    branches: [ main, master ]
+on: [push, workflow_dispatch]
 
 permissions:
   contents: write
@@ -14,64 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Recuperer le projet
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Installer Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Installer Gradle 8.7
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: Verifier les ressources de l'application (cree celles qui manquent)
-        run: |
-          python3 - <<'PY'
-          import os, struct, zlib
-          res = 'app/src/main/res'
-          def png(path, w, h, px):
-              raw = b''.join(b'\x00' + bytes(c for x in range(w) for c in px(x, y)) for y in range(h))
-              def chunk(t, d):
-                  return struct.pack('>I', len(d)) + t + d + struct.pack('>I', zlib.crc32(t + d) & 0xffffffff)
-              os.makedirs(os.path.dirname(path), exist_ok=True)
-              open(path, 'wb').write(b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0)) + chunk(b'IDAT', zlib.compress(raw, 9)) + chunk(b'IEND', b''))
-              print('Ressource manquante creee :', path)
-          def tri(x, y, cx, cy, s):
-              dx = x - (cx - s // 2)
-              return 0 <= dx <= s and abs(y - cy) <= (s - dx) * 0.6
-          banner = res + '/drawable-xhdpi/banner.png'
-          if not os.path.exists(banner):
-              png(banner, 640, 360, lambda x, y: (229, 9, 20) if tri(x, y, 330, 180, 130) else (11, 11, 12))
-          styles = res + '/values/styles.xml'
-          if not os.path.exists(styles):
-              os.makedirs(os.path.dirname(styles), exist_ok=True)
-              open(styles, 'w').write('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">\n        <item name="android:windowBackground">@android:color/black</item>\n    </style>\n</resources>\n')
-              print('Ressource manquante creee :', styles)
-          PY
-
-      - name: Compiler l'application
+      - name: Compiler
         run: gradle assembleDebug --no-daemon --stacktrace
 
-      - name: Preparer le fichier TBSA-Serveur.apk
+      - name: Preparer l'APK
         run: cp app/build/outputs/apk/debug/app-debug.apk TBSA-Serveur.apk
 
-      - name: Garder le fichier (onglet Actions)
-        uses: actions/upload-artifact@v4
-        with:
-          name: TBSA-Serveur-apk
-          path: TBSA-Serveur.apk
-
-      - name: Publier le fichier (lien de telechargement direct dans Releases)
+      - name: Publier dans Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-latest
-          name: Application TBSA (derniere version)
-          body: |
-            Telechargez le fichier TBSA-Serveur.apk ci-dessous, puis installez-le sur votre stick TV
-            (voir LISEZMOI-STICK.txt).
+          name: Application TBSA
           files: TBSA-Serveur.apk
           make_latest: true

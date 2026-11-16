@@ -10,9 +10,15 @@
     <uses-feature android:name="android.hardware.wifi" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
+    <queries>
+        <package android:name="com.amazon.firetv.youtube" />
+        <package android:name="com.google.android.youtube.tv" />
+        <package android:name="com.google.android.youtube" />
+    </queries>
+
     <application
         android:label="TBSA"
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/banner"
         android:banner="@drawable/banner"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
@@ -21,23 +27,72 @@
 
         <provider
             android:name=".UpdateProvider"
-            android:authorities="fr.tbsa.serveur.update"
+            android:authorities="fr.tbsa.mediaserver.update"
             android:exported="false"
             android:grantUriPermissions="true" />
 
         <activity
             android:name=".MainActivity"
-            android:icon="@drawable/ic_launcher"
+            android:icon="@drawable/banner"
             android:banner="@drawable/banner"
             android:label="TBSA"
             android:exported="true"
             android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation|smallestScreenSize|screenLayout|uiMode">
+        </activity>
+
+        <activity-alias
+            android:name=".TileA"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:label="TBSA A"
+            android:icon="@drawable/icon_a"
+            android:banner="@drawable/banner_a">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".TileB"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:label="TBSA B"
+            android:icon="@drawable/banner_b"
+            android:banner="@drawable/banner_b">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".TileC"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:label="TBSA C"
+            android:icon="@drawable/icon_c"
+            android:banner="@drawable/banner_c">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".TileD"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:label="TBSA D"
+            android:icon="@drawable/banner_d"
+            android:banner="@drawable/banner_d">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
     </application>
 </manifest>
